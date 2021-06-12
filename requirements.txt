@@ -8,6 +8,12 @@ wheel>=0.29
 numpy
 pandas
 scikit-learn
+tensorflow
+
+#Data viz
+matplotlib
+seaborn
+plotly
 
 # tests/linter
 black
