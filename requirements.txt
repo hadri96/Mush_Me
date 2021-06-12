@@ -3,12 +3,16 @@ pip>=9
 setuptools>=26
 twine
 wheel>=0.29
+docker
+fastapi
+uvicorn
 
 # data science
 numpy
 pandas
 scikit-learn
 tensorflow
+scipy
 
 #Data viz
 matplotlib
@@ -33,3 +37,5 @@ six>=1.14
 joblib
 memoized-property
 termcolor
+jupyter
+streamlit
