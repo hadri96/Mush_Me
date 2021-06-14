@@ -31,6 +31,8 @@ gcsfs
 google-cloud-storage
 mlflow
 s3fs
+requests
+bs4
 
 # utilities
 six>=1.14
