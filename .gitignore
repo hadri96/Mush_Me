@@ -7,3 +7,7 @@ raw_data/
 .env
 .pythonversion
 .python-version
+Mush_Me/data/metadata/DanishFungi2020_train_metadata_DEV.csv
+Mush_Me/data/metadata/DanishFungi2020_test_metadata_DEV.csv
+Mush_Me/data/metadata/DanishFungi2020-Mini_test_metadata_DEV.csv
+Mush_Me/data/metadata/DanishFungi2020-Mini_train_metadata_DEV.csv
