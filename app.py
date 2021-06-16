@@ -3,39 +3,36 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-#title
-st.title("DISCOVER MUSH ME")
-
-# image
-image = Image.open('front_end/mush_me_logo.jpg')
-col1, col2, col3 = st.beta_columns([1,6,1])
-
-with col1:
-    st.image(image, width=200, use_column_width=None)
-
-with col2:
-    st.write("")
-
-with col3:
-    st.write("")
-
-st.write("You went mushroom picking and you wonder if you can eat a mushroom? Upload your picture and check it by yourself!")
-
 #SIDE BAR
+logo = Image.open('front_end/mush_me_logo.jpg')
+st.sidebar.image(logo, width=200, use_column_width=None)
+st.sidebar.title('ABOUT')
+st.sidebar.write("The aim of this project is to help fervent mushroom pickers to avoid intoxication. This model has been trained using the Danish Fungi Dataset.")
+st.sidebar.write("This application was developped by four students in Data Science @LeWagon #batch619.")
+#title
+st.title("THE MUSH ME PROJECT")
 
-st.sidebar.write("UPLOAD YOUR MUSHROOM PICTURE")
-                 
+st.write('You went mushroom picking and you wonder if you can eat a mushroom? This app helps you verify it by yourself!')
+
+image = Image.open('front_end/beautiful_mushroom.jpeg')
+st.image(image, width=None, use_column_width=None)
+
+st.header("DRAG & DROP")
+                
 # file uploader
-uploaded_file = st.sidebar.file_uploader("Choose a file", accept_multiple_files=True)
+uploaded_file = st.file_uploader("Choose a file", accept_multiple_files=True)
 
 #submit button
-submit = st.sidebar.button("Submit")
+submit = st.button("Submit")
 
 if submit:
-    st.sidebar.write("You succesfully uploaded your file!")
+    st.write("You succesfully uploaded your mushroom picture.")
+else :
+    st.write("Sorry, something went wrong with your upload")    
+st.header("LET THE MAGIC HAPPEN")
 
-#layout left
-st.sidebar.uploaded_file
+st.header("CAN YOU EAT IT?")
+
 
 #output display data
 #st.dataframe(data=None, width=None, height=None)
