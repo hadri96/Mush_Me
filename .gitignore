@@ -11,4 +11,5 @@ Mush_Me/data/metadata/DanishFungi2020_train_metadata_DEV.csv
 Mush_Me/data/metadata/DanishFungi2020_test_metadata_DEV.csv
 Mush_Me/data/metadata/DanishFungi2020-Mini_test_metadata_DEV.csv
 Mush_Me/data/metadata/DanishFungi2020-Mini_train_metadata_DEV.csv
-Mush_Me/data/raw_data/model_test
+Mush_Me/data/raw_data/model_test/
+Mush_Me/data/raw_data/images
