@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import shutil
-from Mush_Me.utils import log_progress
+from utils import log_progress
 from struct import unpack
 
 
