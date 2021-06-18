@@ -76,7 +76,7 @@ class Data:
 
         if _set in ['train', 'test']:
             answer = input('You have selected a big dataset, are you sure you\'d like to proceed? \
-                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
+                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
             if answer == 'y':
                 self._set = _set
             else:
@@ -114,7 +114,7 @@ class Data:
 
         data_filtered = data[data['kingdom']=='Fungi']\
                             [data['CoorUncert']<1000]\
-                            [data["year"] > 1999].reset_index()
+                            [data["year"] > 1999].reset_index().copy()
 
         ### Dropping useless columns
 
@@ -123,6 +123,66 @@ class Data:
             'infraspecificEpithet', 'level0Gid', 'level0Name', 'level1Gid',
             'level1Name', 'level2Gid', 'level2Name', 'gbifID', 'kingdom',
             'taxonRank', 'locality'],inplace=True)
+
+        ### Simplifying the Substrate column
+
+        data_filtered['Substrate'] = data_filtered['Substrate'].map({'soil':'soil',
+                                                             'dead wood (including bark)':'dead wood',
+                                                             'leaf or needle litter':'leaves',
+                                                             'wood':'wood',
+                                                             'bark of living trees':'bark',
+                                                             'mosses':'mosses',
+                                                             'stems of herbs, grass etc':'stems of herbs, grass',
+                                                             'bark':'bark',
+                                                             'wood and roots of living trees':'wood and roots of living trees',
+                                                             'wood chips or mulch':'wood chips or mulch',
+                                                             'dead stems of herbs, grass etc':'stems of herbs, grass',
+                                                             'cones':'cones',
+                                                             'other substrate':'other substrate',
+                                                             'peat mosses':'peat mosses',
+                                                             'living stems of herbs, grass etc':'stems of herbs, grass',
+                                                             'fungi':'fungi',
+                                                             'faeces':'faeces',
+                                                             'fire spot':'fire spot',
+                                                             'fruits':'fruits',
+                                                             'catkins':'catkins',
+                                                             'living leaves':'leaves',
+                                                             'building stone (e.g.## bricks)':'building stone (e.g. bricks)',
+                                                             'liverworts':'liverworts',
+                                                             'lichens':'lichens'})
+
+        ### Simplifying the Habitat colum
+
+        data_filtered['Habitat'] = data_filtered['Habitat'].map({'Deciduous woodland':'deciduous woodland',
+                                                         'Mixed woodland (with coniferous and deciduous trees)':'mixed woodland (coniferous and deciduous trees)',
+                                                         'coniferous woodland/plantation':'coniferous woodland',
+                                                         'Unmanaged deciduous woodland':'deciduous woodland',
+                                                         'park/churchyard':'park',
+                                                         'Unmanaged coniferous woodland':'coniferous woodland',
+                                                         'natural grassland':'grassland',
+                                                         'lawn':'lawn',
+                                                         'roadside':'roadside',
+                                                         'Thorny scrubland':'thorny scrubland',
+                                                         'garden':'garden',
+                                                         'Bog woodland':'wetland',
+                                                         'Forest bog':'wetland',
+                                                         'hedgerow':'hedgerow',
+                                                         'wooded meadow, grazing forest':'wooded meadow',
+                                                         'dune':'dune',
+                                                         'heath':'uncultivated land',
+                                                         'Willow scrubland':'willow scrubland',
+                                                         'bog':'wetland',
+                                                         'salt meadow':'salt meadow',
+                                                         'Acidic oak woodland':'acidic oak woodland',
+                                                         'other habitat':'other habitat',
+                                                         'meadow':'meadow',
+                                                         'gravel or clay pit':'gravel',
+                                                         'improved grassland':'grassland',
+                                                         'roof':'roof',
+                                                         'ditch':'ditch',
+                                                         'fallow field':'fallow land',
+                                                         'fertilized field in rotation':'cultivated land',
+                                                         'rock':'rock'})
 
         ### Rename the column eventDate to date
 
@@ -174,7 +234,7 @@ class Data:
 
         return data_filtered
 
-    def create_csv(self, new_directory = False):
+    def create_csv(self, df, new_directory = False):
         ''' Creates a csv with the clean metadata
             By default, this will create a csv in already existing
             directory. If you wish to create a new set of CSVs please make
@@ -206,7 +266,7 @@ class Data:
 
             ### generate a csv and store it in the new directory
 
-            pd.to_csv(path_new_dir+self._set+'_'+version)
+            df.to_csv(path_new_dir+self._set+'_'+version)
 
         else:
             ### prints the existing directory names to allow the user to pick
@@ -240,7 +300,7 @@ class Data:
 
             ### generates the csv in the directory of this choice
 
-            pd.to_csv(path_dir + self._set + '_' + version)
+            df.to_csv(path_dir + self._set + '_' + version)
 
         return 'CSV created successfully'
 
@@ -301,6 +361,9 @@ class Data:
         return 'Transfer successfully executed'
 
     def directory_by_species(self, create_new_directory=True):
+        ''' Creates a directory which contains one subdirectory for every species
+            present in the dataset'''
+
 
         if self._set in ['train','test']:
             print('Do not run this method with a full dataset')
@@ -328,7 +391,7 @@ class Data:
 
             os.mkdir(path_new_subdir)
 
-            data.apply(lambda x: move_picture_to_species(x[0],x[1],path, path_new_dir), axis=1)
+            data.apply(lambda x: move_picture_to_species(x[0],x[1],path, path_new_subdir), axis=1)
 
             return 'New species directories created with success'
 
@@ -346,3 +409,78 @@ class Data:
             lambda x: move_picture_to_species(x[0], x[1], path, path_new_dir),axis=1)
 
         return 'Transfer successfully executed'
+
+    def get_proba_species_criteria(self, species, criterion):
+
+        ''' This method will allow you the probability of finding a specific species
+            with regards to a certain criterion. Further, the user is asked to input,
+            the specific condition he'd like to check (which month?, which Habitat, etc..).
+        '''
+
+        data = self.get_clean_metadata()[['species',criterion]]
+
+        prob_grid = pd.crosstab(data['species'],
+                                data[criterion],
+                                margins=True,
+                                normalize="index")
+
+        print(set(data[criterion]))
+
+        subcriterion = input('Please enter which specific criterion you\'d like to check: ')
+
+        if subcriterion.isdigit():
+            subcriterion = int(subcriterion)
+
+        return prob_grid.loc[species, subcriterion]
+
+    def create_mini_data_set_df(self, create_csv=True):
+
+        ''' This method can be used to create mini dataset based on the bigger dataset.
+            However, it requires to have the full dataset in local and therefore it can't
+            be executed if that's not the case. This command can only create a test or a train set
+            depending on the argument entered while instancing the class Data, it doesn't work with
+            mini-datasets.'''
+
+        ### Ensures the user is not trying to use it with
+        ### an instance of data created with a mini-set.
+
+        if self._set[:4] == 'mini':
+
+            print('This method only works for the initial dataset.')
+
+            return
+
+        ### Ensures the user is not trying to use it on a computer
+        ### that doesn't have the big dataset.
+
+        if os.getcwd().split('/')[2] != 'hadrienmorand':
+
+            print('You do not have the full dataset\
+                    and therefore cannot run this command'                                                                                                                                                                                                                                                                                                                                                            )
+
+            return
+
+        data = self.get_clean_metadata()
+
+        amount = int(input('How many families would you like to use for this model? '))
+
+        print(sorted(set(data['family'])))
+
+        families = []
+
+        for _ in range(amount):
+
+            answer = input('Select a family name: ')
+
+            families.append(answer)
+
+        data['included'] = data['family'].map(lambda x: 1
+                                              if x in families else 0)
+
+        data = data[data['included'] == 1].drop(columns='included')
+
+        if create_csv:
+
+            self.create_csv(data,new_directory=True)
+
+        return data
