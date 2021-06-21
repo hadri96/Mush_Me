@@ -67,7 +67,7 @@ BUCKET_TRAINING_FOLDER = 'trainings'
 
 ##### Machine configuration - - - - - - - - - - - - - - - -
 
-REGION=europe-west1
+REGION=europe-west6
 
 PYTHON_VERSION=3.8.6
 RUNTIME_VERSION=1.15
