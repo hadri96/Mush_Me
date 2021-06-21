@@ -69,14 +69,14 @@ class Data:
 
         ### _set should be the set you'd like to have
         ### You can pick between 4 datasets = 'train', 'test', 'mini_train', 'mini_test', 'all'
-        self.local_path_to_data = os.path.join('/'.join(os.getcwd().split('/')[:6]),'Mush_Me','data')
+        self.path_to_data = os.path.join('/'.join(os.getcwd().split('/')[:6]),'Mush_Me','data')
 
         ### As some methods only work with the mini-train and mini-test sets, if a bigger dataset is required
         ### the user is required to confirm whether he'd like to proceed.
 
         if _set in ['train', 'test']:
             answer = input('You have selected a big dataset, are you sure you\'d like to proceed? \
-                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
+                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
             if answer == 'y':
                 self._set = _set
             else:
@@ -86,12 +86,16 @@ class Data:
 
         ### creates a path to raw metadata
 
-        self.path_to_raw_metadata = os.path.join(self.local_path_to_data, 'metadata','01_initial_metadata',
+        self.path_to_raw_metadata = os.path.join(self.path_to_data, 'metadata','01_initial_metadata',
                                              ('DanishFungi2020_' + self._set + '_metadata.csv'))
 
         ### creates a path to the pictures folder
 
-        self.path_to_images = os.path.join(self.local_path_to_data, 'raw_data','pictures')
+        self.path_to_images = os.path.join(self.path_to_data, 'raw_data','pictures')
+
+        ### creates a path to the edibility csv
+
+        self.path_to_edibility = os.path.join(self.path_to_data, 'metadata','01_initial_metadata','Pilze_Speisewert.csv')
 
 
 
@@ -108,7 +112,7 @@ class Data:
         '''
 
 
-        ### Filtering the data based on the kingdom Fungi, CoorUncert small than 1000m and collected in 2000 or late
+        ### filter the data based on the kingdom Fungi, CoorUncert small than 1000m and collected in 2000 or late
 
         data = self.get_metadata()
 
@@ -116,7 +120,7 @@ class Data:
                             [data['CoorUncert']<1000]\
                             [data["year"] > 1999].reset_index().copy()
 
-        ### Dropping useless columns
+        ### dropping useless columns
 
         data_filtered.drop(columns=[
             'rightsHolder', 'image_url', 'identifiedBy',
@@ -125,7 +129,7 @@ class Data:
             'taxonRank', 'locality', 'scientificName', 'ImageUniqueID'],
                            inplace=True)
 
-        ### Simplifying the Substrate column
+        ### simplify the Substrate column
 
         data_filtered['Substrate'] = data_filtered['Substrate'].map({'soil':'soil',
                                                              'dead wood (including bark)':'dead wood',
@@ -152,7 +156,7 @@ class Data:
                                                              'liverworts':'liverworts',
                                                              'lichens':'lichens'})
 
-        ### Simplifying the Habitat colum
+        ### simplify the Habitat colum
 
         data_filtered['Habitat'] = data_filtered['Habitat'].map({'Deciduous woodland':'deciduous woodland',
                                                          'Mixed woodland (with coniferous and deciduous trees)':'mixed woodland (coniferous and deciduous trees)',
@@ -185,29 +189,74 @@ class Data:
                                                          'fertilized field in rotation':'cultivated land',
                                                          'rock':'rock'})
 
-        ### Rename the column eventDate to date
+        ### rename the column eventDate to date
 
         data_filtered = data_filtered.rename(columns={'eventDate': 'date'})
 
-        ### Turning the date object into a datetime object
+        ### turn the date object into a datetime object
 
         data_filtered['date'] = pd.to_datetime(data_filtered['date'])
 
-        ### Drop the remaining null values
+        ### drop the remaining null values
 
         data_filtered.dropna(inplace=True)
 
-        ### Correcting the image names to keep only the image names
+        ### correct the image names to keep only the image names
 
         data_filtered['image_path'] = data_filtered['image_path'].map(lambda x: x.replace('/Datasets/DF20/', ''))
 
-        ### Reset index
+        ### turn the edibility table into a Dataframe
+
+        edibility_df = pd.read_csv(self.path_to_edibility, sep=';')
+
+        ### translate the column names from German
+
+        edibility_df = edibility_df.rename(columns={"Name":"species","Wert": "Edibility", "Vorkommen": "Availability"})
+
+        ### drop a useless column
+
+        edibility_df.drop(columns='NameDeutsch', inplace=True)
+
+        ### translate and simplify the different levels of edibility
+
+        edibility_df['Edibility'] = edibility_df['Edibility'].map({'kein Speisepilz':'Non Edible',
+                                                 'essbar':'Edible',
+                                                 'giftig':'Poisonous',
+                                                 'Speisepilz':'Edible',
+                                                 'giftverdächtig':'Poisonous',
+                                                 'Kein Speisepilz':'Non Edible',
+                                                 'jung essbar':'Edible',
+                                                 'bedingt essbar':'Non Edible',
+                                                 'als Gewürzpilz verwendbar':'Non Edible',
+                                                 'tödlich giftig':'Poisonous',
+                                                 'sehr giftig':'Poisonous',
+                                                 'mit Alkohol giftig':'Poisonous',
+                                                 'kein Speisepilz, leicht giftig':'Poisonous',
+                                                 'kein Spiesepilz':'Non Edible',
+                                                 'Gewürzpilz':'Non Edible',
+                                                 'leicht giftig':'Poisonous',
+                                                 'kein Speisepilz acha':'Non Edible',
+                                                 'giftig, kleine Mengen als Gewürzpilz':'Poisonous',
+                                                 'in Speisepilz':'Non Edible',
+                                                 'kein Speisepilz, evtl. giftig':'Poisonous',
+                                                 'essbar (Gewürz)':'Non Edible'})
+
+        ### translate the frequency values
+
+        edibility_df['Availability'] = edibility_df['Availability'].map({'selten':'Rare',
+                                                           'verbreitet bis häufig':'Frequent'})
+
+        ### merge the edibility with the main df
+
+        data_filtered = data_filtered.merge(edibility_df, on='species')
+
+        ### reset index
 
         data_filtered.reset_index(inplace=True)
 
         data_filtered.drop(columns=['level_0', 'index'], inplace=True)
 
-        ### Select specific columns according to user needs
+        ### select specific columns according to user needs
 
         if columns:
             print(data_filtered.columns)
@@ -241,15 +290,15 @@ class Data:
             directory. If you wish to create a new set of CSVs please make
             sure to specify: new_directory = True'''
 
-        self.path_clean_metadata = os.path.join(self.local_path_to_data,
+        self.path_clean_metadata = os.path.join(self.path_to_data,
                                                 'metadata',
                                                 '02_cleaned_metadata')
 
-        ### Checks the number of files in the 02_cleaned_metadata directory
+        ### check the number of files in the 02_cleaned_metadata directory
 
         number_of_files = len(os.listdir(self.path_clean_metadata))
 
-        ### In case of a new directory
+        ### in case of a new directory
 
         if new_directory:
 
@@ -374,7 +423,7 @@ class Data:
 
             data=df
 
-            path = os.path.join(self.local_path_to_data, 'raw_data', 'archives', 'images')
+            path = os.path.join(self.path_to_data, 'raw_data', 'archives', 'images')
 
         else:
 
@@ -465,25 +514,25 @@ class Data:
         if os.getcwd().split('/')[2] != 'hadrienmorand':
 
             print('You do not have the full dataset\
-                    and therefore cannot run this command'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    )
+                    and therefore cannot run this command'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              )
 
             return
 
         data = self.get_clean_metadata()
 
-        amount = int(input('How many families would you like to use for this model? '))
+        amount = int(input('How many genus would you like to use for this model? '))
 
-        print(sorted(set(data['family'])))
+        print(sorted(set(data['genus'])))
 
         families = []
 
         for _ in range(amount):
 
-            answer = input('Select a family name: ')
+            answer = input('Select a genus: ')
 
             families.append(answer)
 
-        data['included'] = data['family'].map(lambda x: 1
+        data['included'] = data['genus'].map(lambda x: 1
                                               if x in families else 0)
 
         data = data[data['included'] == 1].drop(columns='included')
