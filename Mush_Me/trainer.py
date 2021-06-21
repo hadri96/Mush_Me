@@ -59,7 +59,7 @@ AUTOTUNE = tf.data.AUTOTUNE
 def get_data_train():
     """method to get train data from google cloud bucket"""
     image_dataset_train = tf.keras.preprocessing.image_dataset_from_directory(
-        BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
+        BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size,
         shuffle=True, seed=17, validation_split=0.2, subset='training',
         interpolation='bilinear', follow_links=False, smart_resize=False
@@ -70,7 +70,7 @@ def get_data_train():
 def get_data_val():
     """method to get validation data from google cloud bucket"""
     image_dataset_val = tf.keras.preprocessing.image_dataset_from_directory(
-        BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
+        BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size, 
         shuffle=True, seed=17, validation_split=0.2, subset='validation',
         interpolation='bilinear', follow_links=False, smart_resize=False
@@ -150,11 +150,10 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     return model
 
 
-STORAGE_LOCATION = 'models/CNN/MobileNetV2.joblib'
+STORAGE_LOCATION = 'models/CNN/MobileNetV2.h5'
 
 
 def upload_model_to_gcp():
-
 
     client = storage.Client()
 
@@ -162,17 +161,17 @@ def upload_model_to_gcp():
 
     blob = bucket.blob(STORAGE_LOCATION)
 
-    blob.upload_from_filename('model.joblib')
+    blob.upload_from_filename('model.h5')
 
 
-def save_model(reg):
+def save_model(model):
     """method that saves the model into a .joblib file and uploads it on Google Storage /models folder
     HINTS : use joblib library and google-cloud-storage"""
 
     # saving the trained model to disk is mandatory to then beeing able to upload it to storage
     # Implement here
-    joblib.dump(reg, 'model.joblib')
-    print("saved model.joblib locally")
+    model.save('model.h5')
+    print("saved model locally")
 
     # Implement here
     upload_model_to_gcp()
