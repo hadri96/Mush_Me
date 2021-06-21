@@ -76,7 +76,7 @@ class Data:
 
         if _set in ['train', 'test']:
             answer = input('You have selected a big dataset, are you sure you\'d like to proceed? \
-                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
+                            (This might present some limitations further) [y/n]'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
             if answer == 'y':
                 self._set = _set
             else:
@@ -122,7 +122,8 @@ class Data:
             'rightsHolder', 'image_url', 'identifiedBy',
             'infraspecificEpithet', 'level0Gid', 'level0Name', 'level1Gid',
             'level1Name', 'level2Gid', 'level2Name', 'gbifID', 'kingdom',
-            'taxonRank', 'locality'],inplace=True)
+            'taxonRank', 'locality', 'scientificName', 'ImageUniqueID'],
+                           inplace=True)
 
         ### Simplifying the Substrate column
 
@@ -254,7 +255,7 @@ class Data:
 
             ### create a new version_name for the new directory
 
-            version = 'v'+str(number_of_files+1)
+            version = 'v'+str(number_of_files)
 
             ### create a path for the new directory
 
@@ -266,7 +267,7 @@ class Data:
 
             ### generate a csv and store it in the new directory
 
-            df.to_csv(path_new_dir+self._set+'_'+version)
+            df.to_csv(path_new_dir+f'/{version}_'+self._set+'_'+version+'.csv')
 
         else:
             ### prints the existing directory names to allow the user to pick
@@ -300,7 +301,7 @@ class Data:
 
             ### generates the csv in the directory of this choice
 
-            df.to_csv(path_dir + self._set + '_' + version)
+            df.to_csv(path_dir + '_' + self._set + '_' + version)
 
         return 'CSV created successfully'
 
@@ -360,18 +361,26 @@ class Data:
 
         return 'Transfer successfully executed'
 
-    def directory_by_species(self, create_new_directory=True):
+    def directory_by_species(self,df=None, existing_data = False, create_new_directory=True):
         ''' Creates a directory which contains one subdirectory for every species
             present in the dataset'''
 
 
-        if self._set in ['train','test']:
+        if self._set in ['train','test'] and not existing_data:
             print('Do not run this method with a full dataset')
             return None
 
-        data = self.get_clean_metadata(species_directory=True)
+        if existing_data:
 
-        path = os.path.join(self.path_to_images, '00_initial', self._set)
+            data=df
+
+            path = os.path.join(self.local_path_to_data, 'raw_data', 'archives', 'images')
+
+        else:
+
+            data = self.get_clean_metadata(species_directory=True)
+
+            path = os.path.join(self.path_to_images, '00_initial', self._set)
 
         data['is_JPEG'] = data['image_path'].map(lambda x: is_JPEG(x, path))
 
@@ -391,7 +400,7 @@ class Data:
 
             os.mkdir(path_new_subdir)
 
-            data.apply(lambda x: move_picture_to_species(x[0],x[1],path, path_new_subdir), axis=1)
+            data.apply(lambda x: move_picture_to_species(x['species'],x['image_path'],path, path_new_subdir), axis=1)
 
             return 'New species directories created with success'
 
@@ -406,7 +415,7 @@ class Data:
         os.mkdir(path_new_dir)
 
         data.apply(
-            lambda x: move_picture_to_species(x[0], x[1], path, path_new_dir),axis=1)
+            lambda x: move_picture_to_species(x['species'], x['image_path'], path, path_new_dir),axis=1)
 
         return 'Transfer successfully executed'
 
@@ -433,7 +442,7 @@ class Data:
 
         return prob_grid.loc[species, subcriterion]
 
-    def create_mini_data_set_df(self, create_csv=True):
+    def create_mini_data_set_df(self, create_csv=True,create_folders=False):
 
         ''' This method can be used to create mini dataset based on the bigger dataset.
             However, it requires to have the full dataset in local and therefore it can't
@@ -456,7 +465,7 @@ class Data:
         if os.getcwd().split('/')[2] != 'hadrienmorand':
 
             print('You do not have the full dataset\
-                    and therefore cannot run this command'                                                                                                                                                                                                                                                                                                                                                            )
+                    and therefore cannot run this command'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    )
 
             return
 
@@ -479,8 +488,16 @@ class Data:
 
         data = data[data['included'] == 1].drop(columns='included')
 
+        data.reset_index(inplace=True)
+
+        data.drop(columns=['index'], inplace=True)
+
         if create_csv:
 
             self.create_csv(data,new_directory=True)
+
+        if create_folders:
+
+            self.directory_by_species(df=data, existing_data=True)
 
         return data
