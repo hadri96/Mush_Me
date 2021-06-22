@@ -1,20 +1,18 @@
 from google.cloud import storage
 import pandas as pd
 import numpy as np
-import os
+import os, sys
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import joblib
 
-### GCP configuration - - - - - - - - - - - - - - - - - - -
-
-# /!\ you should fill these according to your account
-
-### GCP Project - - - - - - - - - - - - - - - - - - - - - -
-
-# not required here
+import logging
+import google.cloud.logging
+client = google.cloud.logging.Client()
+client.get_default_handler()
+client.setup_logging()
 
 ### GCP Storage - - - - - - - - - - - - - - - - - - - - - -
 
@@ -25,8 +23,8 @@ BUCKET_NAME = 'mush_me_hector2gt'
 # train data file location
 # /!\ here you need to decide if you are going to train using the provided and uploaded data/train_1k.csv sample file
 # or if you want to use the full dataset (you need need to upload it first of course)
-BUCKET_TRAIN_DATA_PATH = 'data/mini_train/'
-BUCKET_TEST_DATA_PATH = 'data/mini_test/'
+BUCKET_TRAIN_DATA_PATH = './data/mini_train/'
+BUCKET_TEST_DATA_PATH = './data/mini_test/'
 
 ##### Training  - - - - - - - - - - - - - - - - - - - - - -
 
@@ -49,7 +47,7 @@ MODEL_VERSION = 'v1'
 batch_size = 32
 img_size = (224,224)
 epochs = 25
-base_learning_rate = 0.0001
+base_learning_rate = 0.001
 AUTOTUNE = tf.data.AUTOTUNE
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -57,12 +55,12 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 
 def get_data_train():
-    """method to get train data from google cloud bucket"""
+    """method to get train data from google cloud bucket"""      
     image_dataset_train = tf.keras.preprocessing.image_dataset_from_directory(
-        BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
+        BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size,
         shuffle=True, seed=17, validation_split=0.2, subset='training',
-        interpolation='bilinear', follow_links=False, smart_resize=False
+        interpolation='bilinear', follow_links=False
     )
     
     return image_dataset_train.prefetch(buffer_size=AUTOTUNE)
@@ -70,21 +68,23 @@ def get_data_train():
 def get_data_val():
     """method to get validation data from google cloud bucket"""
     image_dataset_val = tf.keras.preprocessing.image_dataset_from_directory(
-        BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
+        BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size, 
         shuffle=True, seed=17, validation_split=0.2, subset='validation',
-        interpolation='bilinear', follow_links=False, smart_resize=False
+        interpolation='bilinear', follow_links=False
     )
     
     return image_dataset_val.prefetch(buffer_size=AUTOTUNE)
 
 def get_data_test():
     """method to get test data from google cloud bucket"""
+    
+    
     image_dataset_test = tf.keras.preprocessing.image_dataset_from_directory(
         BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size, 
         shuffle=True, seed=None, validation_split=None, subset=None,
-        interpolation='bilinear', follow_links=False, smart_resize=False
+        interpolation='bilinear', follow_links=False
     )
     
     return image_dataset_test.prefetch(buffer_size=AUTOTUNE)
@@ -92,7 +92,7 @@ def get_data_test():
 
 def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     """method that trains the model"""
-    
+
     "Data Augmentation"
     
     data_augmentation = keras.Sequential(
@@ -180,6 +180,13 @@ def save_model(model):
 
 if __name__ == '__main__':
     # get data from GCP bucket
+    logging.info('starting trainer.py')
+    os.system(f'gsutil -m cp -r gs://{BUCKET_NAME}/data .')
+    logging.info('copy file completed')
+    
+    logging.info(f'folders in dir {os.listdir()}')
+    
+    logging.info('preparing datasets')
     train_img = get_data_train()
     val_img = get_data_val()
     test_img = get_data_test()

@@ -63,18 +63,18 @@ BUCKET_NAME=mush_me_hector2gt
 ##### Training  - - - - - - - - - - - - - - - - - - - - - -
 
 # will store the packages uploaded to GCP for the training
-BUCKET_TRAINING_FOLDER = 'trainings'
+BUCKET_TRAINING_FOLDER = trainings
 
 ##### Machine configuration - - - - - - - - - - - - - - - -
 
-REGION=europe-west6
+REGION=europe-west4
 
-PYTHON_VERSION=3.8.6
-RUNTIME_VERSION=1.15
+PYTHON_VERSION=3.7
+RUNTIME_VERSION=2.4
 
 ##### Package params  - - - - - - - - - - - - - - - - - - -
 
-PACKAGE_NAME=Mush Me
+PACKAGE_NAME=Mush_Me
 FILENAME=trainer
 
 ##### Job - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -94,6 +94,20 @@ gcp_submit_training:
 		--runtime-version=${RUNTIME_VERSION} \
 		--region ${REGION} \
 		--stream-logs
+
+gcp_submit_training_GPU:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+		
 
 clean:
 	@rm -f */version.txt
