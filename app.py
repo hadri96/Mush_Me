@@ -9,7 +9,7 @@ file = Data()
 data = file.get_clean_metadata()
 
 #SIDE BAR
-logo = Image.open('front_end/mush_me_logo.jpg')
+logo = Image.open('front_end/new-logo.jpeg')
 st.sidebar.image(logo, width=280, use_column_width=None)
 st.sidebar.title('ABOUT')
 st.sidebar.write("The aim of this project is to help fervent mushroom pickers to avoid intoxication. This model has been trained using the Danish Fungi Dataset.")
@@ -19,12 +19,12 @@ st.sidebar.header('**DISCLAIMER**')
 st.sidebar.write('_The results provided by this application are predictions and should be always be cross-validated by a mushroom expert before eating._')
 
 #TITLE
-st.title("THE MUSH ME PROJECT")
+st.title("MUSH ME")
 
 #1st STEP
-st.write('**You went mushroom picking and you wonder if you can eat a mushroom? This app helps you verify it by yourself!**')
+st.write('You went mushroom picking and you wonder if you can eat it? Verify it by yourself!')
 
-st.header("DRAG & DROP")         
+st.header("DRAG & DROP YOUR PICTURE")         
 uploaded_file = st.file_uploader("Choose a file", accept_multiple_files=True) 
 
 monthes = ['January', 'February','March','April','May','June','July','August','September','October','November','December']
