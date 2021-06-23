@@ -6,9 +6,14 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.metrics import Recall
 import joblib
 
 import logging
+
+from tensorflow.python.framework.ops import convert_to_tensor_v1
+from tensorflow.python.keras.backend import dropout
+from tensorflow.python.keras.layers.normalization import BatchNormalization
 import google.cloud.logging
 
 client = google.cloud.logging.Client()
@@ -45,10 +50,10 @@ MODEL_VERSION = 'v1'
 
 ### MODEL SPECS
 
-batch_size = 32
-img_size = (224,224)
+batch_size = 64
+img_size = (380,380)
 epochs = 50
-base_learning_rate = 0.001
+base_learning_rate = 0.01
 AUTOTUNE = tf.data.AUTOTUNE
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -63,7 +68,7 @@ def get_data_train():
         shuffle=True, seed=17, validation_split=0.1, subset='training',
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_train.prefetch(buffer_size=AUTOTUNE)
 
 def get_data_val():
@@ -74,7 +79,7 @@ def get_data_val():
         shuffle=True, seed=17, validation_split=0.1, subset='validation',
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_val.prefetch(buffer_size=AUTOTUNE)
 
 def get_data_test():
@@ -87,7 +92,7 @@ def get_data_test():
         shuffle=True, seed=None, validation_split=None, subset=None,
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_test.prefetch(buffer_size=AUTOTUNE)
 
 
@@ -100,45 +105,36 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
         [
         layers.experimental.preprocessing.RandomFlip("horizontal"),
         layers.experimental.preprocessing.RandomContrast(0.1),
-        layers.experimental.preprocessing.RandomRotation(0.1),
-        layers.experimental.preprocessing.RandomZoom(0.1),
+        layers.experimental.preprocessing.RandomRotation(0.2),
+        layers.experimental.preprocessing.RandomZoom(0.2),
         ]
     )
     
-    "Create Model Using MobileNet V2"
-    
-    preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
+    "Create Model Using "
     
     IMG_SHAPE = img_size + (3,)
-    base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+    
+    conv_base = tf.keras.applications.EfficientNetB4(input_shape=(380,380,3),
                                                 include_top=False,
                                                 weights='imagenet')
     
-    image_batch, label_batch = next(iter(image_dataset_train))
-    feature_batch = base_model(image_batch)
+    conv_base.trainable = False
     
-    base_model.trainable = False
-    
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-    feature_batch_average = global_average_layer(feature_batch)
-    
-    prediction_layer = tf.keras.layers.Dense(179)
-    prediction_batch = prediction_layer(feature_batch_average)
-    
-    inputs = tf.keras.Input(shape=(224, 224, 3))
-    x = data_augmentation(inputs)
-    x = preprocess_input(inputs)
-    x = base_model(x, training=False)
-    x = global_average_layer(x)
-    x = layers.Dropout(0.2)(x)
-    outputs = prediction_layer(x)
-    model = tf.keras.Model(inputs, outputs)
+    model = tf.keras.Sequential([
+        data_augmentation,
+        conv_base,
+        layers.GlobalMaxPooling2D(),
+        layers.Dropout(0.2),
+        tf.keras.layers.Dense(300),
+        layers.Dropout(0.2),
+        tf.keras.layers.Dense(179, activation = 'softmax')
+    ])
     
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 metrics=['accuracy'])
     
-    es = keras.callbacks.EarlyStopping(patience = 4, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(patience = 3, restore_best_weights=True)
     
     model.fit(
             image_dataset_train,
@@ -148,14 +144,12 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
             verbose = 1
         )
     
-    print("trained model")
-    
     model.evaluate(image_dataset_test, batch_size = batch_size)
     
     return model
 
 
-STORAGE_LOCATION = 'models/CNN/MobileNetV2.h5'
+STORAGE_LOCATION = 'models/CNN/EfficientNetB4.h5'
 
 
 def upload_model_to_gcp():
