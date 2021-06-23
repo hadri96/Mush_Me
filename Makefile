@@ -82,6 +82,18 @@ FILENAME=trainer
 JOB_NAME=mush_me_training_pipeline_$(shell date +'%Y%m%d_%H%M%S')
 
 
+GCR_MULTI_REGION=eu.gcr.io
+GCR_REGION=europe-west1
+DOCKER_IMAGE_NAME=mush-me-api
+GCP_PROJECT_ID=mush_me_hector2gt
+
+docker_build:
+	docker build  --no-cache -t ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} ./back_end/
+	docker push ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME}
+	gcloud run deploy --image ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} \
+		--platform managed \
+		--region ${GCR_REGION}
+
 run_locally:
 	@python -m ${PACKAGE_NAME}.${FILENAME}
 
