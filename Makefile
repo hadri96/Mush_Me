@@ -59,6 +59,7 @@ pypi:
 # ----------------------------------
 
 BUCKET_NAME=mush_me_hector2gt
+BUCKET_NAME_HADRIEN=mush_me
 
 ##### Training  - - - - - - - - - - - - - - - - - - - - - -
 
@@ -76,6 +77,10 @@ RUNTIME_VERSION=2.4
 
 PACKAGE_NAME=Mush_Me
 FILENAME=trainer
+FILENAME_EFNET=trainerv2
+FILENAME_EFNETV3=trainerv3
+FILENAME_EFNETV3_TRAIN=trainerv4
+FILENAME_HADRIEN=trainer_hadrien
 
 ##### Job - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -108,6 +113,57 @@ gcp_submit_training_GPU:
 		--master-accelerator count=1,type=nvidia-tesla-t4 \
 		--stream-logs
 		
+gcp_submit_training_GPU_efnet:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_EFNET} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+		
+gcp_submit_training_GPU_efnetv3:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_EFNETV3} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+
+gcp_submit_training_GPU_efnetv3_train:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_EFNETV3_TRAIN} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+
+gcp_submit_training_GPU_efnetv3_hadrien:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME_HADRIEN}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_EFNETV3} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
 
 clean:
 	@rm -f */version.txt
