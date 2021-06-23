@@ -90,11 +90,11 @@ JOB_NAME=mush_me_training_pipeline_$(shell date +'%Y%m%d_%H%M%S')
 GCR_MULTI_REGION=eu.gcr.io
 GCR_REGION=europe-west1
 DOCKER_IMAGE_NAME=mush-me-api
-GCP_PROJECT_ID=mush_me_hector2gt
+GCP_PROJECT_ID=le-wagon-bootcamp-316213
 
 docker_build:
-	docker build  --no-cache -t ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} ./back_end/
-	docker push ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME}
+	sudo docker build -t ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} ./back_end/
+	sudo docker push ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME}
 	gcloud run deploy --image ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} \
 		--platform managed \
 		--region ${GCR_REGION}
@@ -164,11 +164,11 @@ gcp_submit_training_GPU_efnetv3_train:
 		--master-accelerator count=1,type=nvidia-tesla-t4 \
 		--stream-logs
 
-gcp_submit_training_GPU_efnetv3_hadrien:
+gcp_submit_training_GPU_hadrien:
 	gcloud ai-platform jobs submit training ${JOB_NAME} \
 		--job-dir gs://${BUCKET_NAME_HADRIEN}/${BUCKET_TRAINING_FOLDER} \
 		--package-path ${PACKAGE_NAME} \
-		--module-name ${PACKAGE_NAME}.${FILENAME_EFNETV3} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_HADRIEN} \
 		--python-version=${PYTHON_VERSION} \
 		--runtime-version=${RUNTIME_VERSION} \
 		--region ${REGION} \
