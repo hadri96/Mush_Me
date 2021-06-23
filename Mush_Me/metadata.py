@@ -468,7 +468,7 @@ class Data:
 
         return 'Transfer successfully executed'
 
-    def get_proba_species_criteria(self, species, criterion):
+    def get_proba_species_criteria(self, species, criterion, subcriterion=False):
 
         ''' This method will allow you the probability of finding a specific species
             with regards to a certain criterion. Further, the user is asked to input,
@@ -484,14 +484,16 @@ class Data:
 
         print(set(data[criterion]))
 
-        subcriterion = input('Please enter which specific criterion you\'d like to check: ')
+        if not subcriterion:
+
+            subcriterion= input('Please enter which specific criterion you\'d like to check: ')
 
         if subcriterion.isdigit():
             subcriterion = int(subcriterion)
 
         return prob_grid.loc[species, subcriterion]
 
-    def create_mini_data_set_df(self, create_csv=True,create_folders=False):
+    def create_mini_data_set_df(self, families=None, create_csv=True,create_folders=False, user_input=True, create_new_directory=True):
 
         ''' This method can be used to create mini dataset based on the bigger dataset.
             However, it requires to have the full dataset in local and therefore it can't
@@ -520,17 +522,22 @@ class Data:
 
         data = self.get_clean_metadata()
 
-        amount = int(input('How many genus would you like to use for this model? '))
+        if user_input:
 
-        print(sorted(set(data['genus'])))
+            amount = int(input('How many genus would you like to use for this model? '))
 
-        families = []
+            print(sorted(set(data['genus'])))
 
-        for _ in range(amount):
+            families = []
 
-            answer = input('Select a genus: ')
+            for _ in range(amount):
 
-            families.append(answer)
+                answer = input('Select a genus: ')
+
+                families.append(answer)
+
+        else:
+          families=families
 
         data['included'] = data['genus'].map(lambda x: 1
                                               if x in families else 0)
@@ -547,6 +554,6 @@ class Data:
 
         if create_folders:
 
-            self.directory_by_species(df=data, existing_data=True)
+            self.directory_by_species(df=data, existing_data=True, create_new_directory=create_new_directory)
 
         return data
