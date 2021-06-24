@@ -53,7 +53,7 @@ MODEL_VERSION = 'v1'
 batch_size = 64
 img_size = (380,380)
 epochs = 50
-base_learning_rate = 0.01
+base_learning_rate = 0.001
 AUTOTUNE = tf.data.AUTOTUNE
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -114,6 +114,8 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     
     IMG_SHAPE = img_size + (3,)
     
+    inputs = layers.Input(shape=(IMG_SHAPE))
+    x = data_augmentation(inputs)    
     conv_base = tf.keras.applications.EfficientNetB4(input_shape=(380,380,3),
                                                 include_top=False,
                                                 weights='imagenet')
@@ -125,16 +127,14 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
         conv_base,
         layers.GlobalMaxPooling2D(),
         layers.Dropout(0.2),
-        tf.keras.layers.Dense(300),
-        layers.Dropout(0.2),
-        tf.keras.layers.Dense(179, activation = 'softmax')
+        tf.keras.layers.Dense(179)
     ])
     
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 metrics=['accuracy'])
     
-    es = keras.callbacks.EarlyStopping(patience = 3, restore_best_weights=True)
+    es = keras.callbacks.EarlyStopping(patience = 7, restore_best_weights=False)
     
     model.fit(
             image_dataset_train,
