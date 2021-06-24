@@ -78,6 +78,7 @@ RUNTIME_VERSION=2.4
 PACKAGE_NAME=Mush_Me
 FILENAME=trainer
 FILENAME_EFNET=trainerv2
+FILENAME_RESNET=trainer_resnet
 FILENAME_EFNETV3=trainerv3
 FILENAME_EFNETV3_TRAIN=trainerv4
 FILENAME_HADRIEN=trainer_hadrien
@@ -97,7 +98,7 @@ GCP_PROJECT_ID=le-wagon-bootcamp-316213
 docker_build:
 	sudo docker build -t ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} ./back_end/
 	sudo docker push ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME}
-	gcloud run deploy --image ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} \
+	sudo gcloud run deploy --image ${GCR_MULTI_REGION}/${GCP_PROJECT_ID}/${DOCKER_IMAGE_NAME} \
 		--platform managed \
 		--region ${GCR_REGION}
 
@@ -126,6 +127,20 @@ gcp_submit_training_GPU:
 		--master-machine-type=n1-highmem-8 \
 		--master-accelerator count=1,type=nvidia-tesla-t4 \
 		--stream-logs
+		
+gcp_submit_training_GPU_resnet:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_RESNET} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+
 
 gcp_submit_training_GPU_efnet:
 	gcloud ai-platform jobs submit training ${JOB_NAME} \
