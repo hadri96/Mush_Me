@@ -2,14 +2,9 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from PIL import Image
-from Mush_Me.metadata import Data
-
-file = Data()
-
-data = file.get_clean_metadata()
 
 #SIDE BAR
-logo = Image.open('front_end/new-logo.jpeg')
+logo = Image.open('new-logo.jpeg')
 st.sidebar.image(logo, width=280, use_column_width=None)
 st.sidebar.title('ABOUT')
 st.sidebar.write("The aim of this project is to help fervent mushroom pickers to avoid intoxication. This model has been trained using the Danish Fungi Dataset.")
@@ -27,16 +22,7 @@ st.write('You went mushroom picking and you wonder if you can eat it? Verify it 
 st.header("DRAG & DROP YOUR PICTURE")         
 uploaded_file = st.file_uploader("Choose a file", accept_multiple_files=True) 
 
-monthes = ['January', 'February','March','April','May','June','July','August','September','October','November','December']
-st.selectbox('SELECT A MONTH:', monthes, index=0, format_func=str, key=None, help=None)   
-
-substrate = sorted(set(data['Substrate']))
-st.selectbox('SELECT A SUBSTRATE:', substrate, index=0, format_func=str, key=None, help=None)   
-
-habitat = sorted(set(data['Habitat']))
-st.selectbox('SELECT AN ENVIRONMENT:', habitat , index=0, format_func=str, key=None, help=None)   
-
-submit = st.button("Submit")
+submit = st.button("Predict")
 if submit:
     st.write("You succesfully uploaded your mushroom picture.")
 else :
