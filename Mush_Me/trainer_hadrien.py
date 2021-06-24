@@ -56,38 +56,38 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 
 def get_data_train():
-    """method to get train data from google cloud bucket"""      
+    """method to get train data from google cloud bucket"""
     image_dataset_train = tf.keras.preprocessing.image_dataset_from_directory(
         BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
         class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size,
         shuffle=True, seed=17, validation_split=0.1, subset='training',
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_train.prefetch(buffer_size=AUTOTUNE)
 
 def get_data_val():
     """method to get validation data from google cloud bucket"""
     image_dataset_val = tf.keras.preprocessing.image_dataset_from_directory(
         BUCKET_TRAIN_DATA_PATH, labels='inferred', label_mode='int',
-        class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size, 
+        class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size,
         shuffle=True, seed=17, validation_split=0.1, subset='validation',
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_val.prefetch(buffer_size=AUTOTUNE)
 
 def get_data_test():
     """method to get test data from google cloud bucket"""
-    
-    
+
+
     image_dataset_test = tf.keras.preprocessing.image_dataset_from_directory(
         BUCKET_TEST_DATA_PATH, labels='inferred', label_mode='int',
-        class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size, 
+        class_names=None, color_mode='rgb', batch_size=batch_size, image_size=img_size,
         shuffle=True, seed=None, validation_split=None, subset=None,
         interpolation='bilinear', follow_links=False
     )
-    
+
     return image_dataset_test.prefetch(buffer_size=AUTOTUNE)
 
 
@@ -95,7 +95,7 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     """method that trains the model"""
 
     "Data Augmentation"
-    
+
     data_augmentation = keras.Sequential(
         [
         layers.experimental.preprocessing.RandomFlip("horizontal"),
@@ -104,27 +104,27 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
         layers.experimental.preprocessing.RandomZoom(0.1),
         ]
     )
-    
+
     "Create Model Using MobileNet V2"
-    
+
     preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
-    
+
     IMG_SHAPE = img_size + (3,)
     base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
                                                 include_top=False,
                                                 weights='imagenet')
-    
+
     image_batch, label_batch = next(iter(image_dataset_train))
     feature_batch = base_model(image_batch)
-    
+
     base_model.trainable = False
-    
+
     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
     feature_batch_average = global_average_layer(feature_batch)
-    
-    prediction_layer = tf.keras.layers.Dense(179)
+
+    prediction_layer = tf.keras.layers.Dense(376)
     prediction_batch = prediction_layer(feature_batch_average)
-    
+
     inputs = tf.keras.Input(shape=(224, 224, 3))
     x = data_augmentation(inputs)
     x = preprocess_input(inputs)
@@ -133,13 +133,13 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     x = layers.Dropout(0.2)(x)
     outputs = prediction_layer(x)
     model = tf.keras.Model(inputs, outputs)
-    
+
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                 metrics=['accuracy'])
-    
+
     es = keras.callbacks.EarlyStopping(patience = 4, restore_best_weights=True)
-    
+
     model.fit(
             image_dataset_train,
             validation_data=image_dataset_val,
@@ -147,11 +147,11 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
             callbacks = [es],
             verbose = 1
         )
-    
+
     print("trained model")
-    
+
     model.evaluate(image_dataset_test, batch_size = batch_size)
-    
+
     return model
 
 
@@ -186,11 +186,11 @@ def save_model(model):
 if __name__ == '__main__':
     # get data from GCP bucket
     logging.info('starting trainer.py')
-    os.system(f'gsutil -m cp -r gs://{BUCKET_NAME}/data .')
+    os.system(f'gsutil -m cp -r gs://{BUCKET_NAME}/02_By_Species_Dataset .')
     logging.info('copy file completed')
-    
+
     logging.info(f'folders in dir {os.listdir()}')
-    
+
     logging.info('preparing datasets')
     train_img = get_data_train()
     val_img = get_data_val()

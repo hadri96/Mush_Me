@@ -55,7 +55,7 @@ pypi:
 	@twine upload dist/* -u $(PYPI_USERNAME)
 
 # ----------------------------------
-#            GCP SETUP 
+#            GCP SETUP
 # ----------------------------------
 
 BUCKET_NAME=mush_me_hector2gt
@@ -81,6 +81,8 @@ FILENAME_EFNET=trainerv2
 FILENAME_EFNETV3=trainerv3
 FILENAME_EFNETV3_TRAIN=trainerv4
 FILENAME_HADRIEN=trainer_hadrien
+FILENAME_HADRIEN_V2=trainer_hadrien_v2
+FILENAME_HADRIEN_V3=trainer_hadrien_v3
 
 ##### Job - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -124,7 +126,7 @@ gcp_submit_training_GPU:
 		--master-machine-type=n1-highmem-8 \
 		--master-accelerator count=1,type=nvidia-tesla-t4 \
 		--stream-logs
-		
+
 gcp_submit_training_GPU_efnet:
 	gcloud ai-platform jobs submit training ${JOB_NAME} \
 		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
@@ -137,7 +139,7 @@ gcp_submit_training_GPU_efnet:
 		--master-machine-type=n1-highmem-8 \
 		--master-accelerator count=1,type=nvidia-tesla-t4 \
 		--stream-logs
-		
+
 gcp_submit_training_GPU_efnetv3:
 	gcloud ai-platform jobs submit training ${JOB_NAME} \
 		--job-dir gs://${BUCKET_NAME}/${BUCKET_TRAINING_FOLDER} \
@@ -169,6 +171,32 @@ gcp_submit_training_GPU_hadrien:
 		--job-dir gs://${BUCKET_NAME_HADRIEN}/${BUCKET_TRAINING_FOLDER} \
 		--package-path ${PACKAGE_NAME} \
 		--module-name ${PACKAGE_NAME}.${FILENAME_HADRIEN} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+
+gcp_submit_training_GPU_hadrien_v2:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME_HADRIEN}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_HADRIEN_V2} \
+		--python-version=${PYTHON_VERSION} \
+		--runtime-version=${RUNTIME_VERSION} \
+		--region ${REGION} \
+		--scale-tier=CUSTOM \
+		--master-machine-type=n1-highmem-8 \
+		--master-accelerator count=1,type=nvidia-tesla-t4 \
+		--stream-logs
+
+gcp_submit_training_GPU_hadrien_v3:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--job-dir gs://${BUCKET_NAME_HADRIEN}/${BUCKET_TRAINING_FOLDER} \
+		--package-path ${PACKAGE_NAME} \
+		--module-name ${PACKAGE_NAME}.${FILENAME_HADRIEN_V3} \
 		--python-version=${PYTHON_VERSION} \
 		--runtime-version=${RUNTIME_VERSION} \
 		--region ${REGION} \
