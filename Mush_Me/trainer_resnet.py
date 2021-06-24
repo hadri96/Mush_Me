@@ -53,7 +53,7 @@ MODEL_VERSION = 'v1'
 batch_size = 64
 img_size = (224,224)
 epochs = 50
-base_learning_rate = 0.001
+base_learning_rate = 0.005
 AUTOTUNE = tf.data.AUTOTUNE
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -141,7 +141,7 @@ def train_model(image_dataset_train, image_dataset_val, image_dataset_test):
     
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                 loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                metrics=['accuracy'])
+                metrics=['sparse_top_k_categorical_accuracy', 'accuracy'])
     
     es = keras.callbacks.EarlyStopping(patience = 7, restore_best_weights=False)
     
